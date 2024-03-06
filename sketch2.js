@@ -1,67 +1,84 @@
+let length, proportion, maxlevel;
+
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(500, 500);
   
   // Crear sliders y asignar valores iniciales
-  iterationsSlider = createSlider(1, 6, 1, 1);
+  iterationsSlider = createSlider(1, 6, 3, 1);
   iterationsSlider.position(20, 40);
   let p = createP('iteraciones');
   p.position(20, 5);
   
   let q = createP('proporción');
   q.position(20, 45);
-  proportionSlider = createSlider(0.4, 0.8, 0.5, 0.1);
+  proportionSlider = createSlider(0.3, 0.7, 0.5, 0.1);
   proportionSlider.position(20, 80);
   
   let pq = createP('longitud');
   pq.position(20, 85);
-  lengthSlider = createSlider(100, 600, 200, 50);
+  lengthSlider = createSlider(width/4, width, width/4, width/4);
   lengthSlider.position(20, 120);
-  
+  translate(width/2,height/2);
+  drawFractal();
+  iterationsSlider.changed(drawFractal);
+  proportionSlider.changed(drawFractal);
+  lengthSlider.changed(drawFractal);
+}
+
+function drawFractal(){
+  maxlevel = iterationsSlider.value();
+  proportion = proportionSlider.value();
   length = lengthSlider.value();
-  
-
-  
-  for (let i = 0; i < iterationsSlider.value()+1; i++){
-    drawTSquareFractal(width/2 - length/2, height/2 - length/2, length, i);
-  }
-  
-    // Escuchar cambios en los sliders
-    iterationsSlider.changed(redrawFractal);
-    proportionSlider.changed(redrawFractal);
-    lengthSlider.changed(redrawFractal);
+  h = length/2;
+  background(220);
+  f_1 = funciones(createVector(h,-h));
+  g_1 = funciones(createVector(h,h));
+  f_2 = funciones(createVector(-h,h));
+  g_2 = funciones(createVector(-h,-h));
+  transformaciones = [f_1,g_1,f_2,g_2];
+  drawOrbit(transformaciones,createVector(-h,-h));
 }
 
-function redrawFractal() {
-  clear();
-  length = lengthSlider.value();;
-  for (let i = 0; i < iterationsSlider.value()+1; i++){
-    drawTSquareFractal(width/2 - length/2, height/2 - length/2, length, i);
+function funciones(direccion){
+  return function(p){
+    return p5.Vector.add(p5.Vector.mult(p5.Vector.add(p,direccion),proportion),direccion);
   }
 }
 
-function drawTSquareFractal(x, y, len, iter, wai) {
-  if (iter === 0) {
-    //noFill();
-    stroke(0);
-    fill(0);
-    rect(x+len*proportionSlider.value(),y+len*proportionSlider.value(),len,len);
-  } 
-  else {
-    if (iter ===1) {
-      let newLen = len * proportionSlider.value();
-      let offset = (len - newLen)/2 ;
-      drawTSquareFractal(x - offset, y - offset, newLen, iter - 1);
-      drawTSquareFractal(x + offset + len, y - offset, newLen, iter - 1);
-      drawTSquareFractal(x - offset, y + offset + len, newLen, iter - 1);
-      drawTSquareFractal(x + offset + len, y + offset + len, newLen, iter - 1);
+function createindexesnotinverse(){
+  let inotinverse = [];
+  let kinv;
+  for (let k=1; k<=4;k++){
+    kinv = ((k + 1) % 4);
+    let a = [];
+    let b = [];
+    for(let j = kinv+1;j<4;j++){
+      append(a,j);
+    }
+    for(let j = 0;j<=kinv-1;j++){
+      append(b,j);
+    }
+    c = a.concat(b);
+    inotinverse.push(c);
   }
-    else {
-      let newLen = len * proportionSlider.value();
-      let offset = (len - newLen) / 2;
-      drawTSquareFractal(x - offset, y - offset, newLen, iter - 1);
-      drawTSquareFractal(x + offset + len, y - offset, newLen, iter - 1);
-      drawTSquareFractal(x - offset, y + offset + len, newLen, iter - 1);
-      drawTSquareFractal(x + offset + len, y + offset + len, newLen, iter - 1);
+  return inotinverse;
+}
+
+function drawOrbit(transformaciones, p){
+  indexnotinverse = createindexesnotinverse();
+  
+  function traverseforward(p, index, level){
+    square(p.x,p.y,length*(proportion**(level)));
+    if (level >= maxlevel){
+      return;
+    }
+    let indices = indexnotinverse[index];
+    for (let i=0; i<3;i++){
+      traverseforward(transformaciones[indices[i]](p), indices[i], level+1);
+    }
   }
+  square(p.x,p.y,length);
+  for(let i = 0;i<4;i++){
+    traverseforward(transformaciones[i](p),i,1);
   }
 }
