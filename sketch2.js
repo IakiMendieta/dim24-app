@@ -1,7 +1,7 @@
 let length, proportion, maxlevel;
 
 function setup() {
-  createCanvas(500, 500);
+  createCanvas(800, 800);
   
   // Crear sliders y asignar valores iniciales
   iterationsSlider = createSlider(1, 6, 3, 1);
@@ -11,12 +11,12 @@ function setup() {
   
   let q = createP('proporción');
   q.position(20, 45);
-  proportionSlider = createSlider(0.3, 0.7, 0.5, 0.1);
+  proportionSlider = createSlider(0.2, 0.5, 0.4, 0.01);
   proportionSlider.position(20, 80);
   
   let pq = createP('longitud');
   pq.position(20, 85);
-  lengthSlider = createSlider(width/4, width, width/4, width/4);
+  lengthSlider = createSlider(width/18, width/3, width/18, width/18);
   lengthSlider.position(20, 120);
   translate(width/2,height/2);
   drawFractal();
