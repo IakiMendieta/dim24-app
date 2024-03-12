@@ -94,7 +94,7 @@ function createindexesnotinverse(){
   let inotinverse = [];
   let kinv;
   for (let k=1; k<=numgens;k++){
-    kinv = ((k + 1) % numgens);
+    kinv = ((k + numgens/2 - 1) % numgens);
     let a = [];
     let b = [];
     for(let j = kinv+1;j<numgens;j++){
