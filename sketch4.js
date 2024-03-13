@@ -106,6 +106,7 @@ function drawPolyPhoto(p, level){
   }
   mascara.endShape(CLOSE);
   imgCopy.mask(mascara);
+  tint(colorPickerCuadro.value())
   image(imgCopy, p[p.length-1].x, p[p.length-1].y,a,a);
 }
 
