@@ -79,27 +79,24 @@ function generateVertex(){
     p = createVector(length*cos(2*PI*i/numgens+theta),length*sin(2*PI*i/numgens+theta));
     append(vertices, p);
   }
+  append(vertices, createVector(length*cos(PI+PI/4),length*sin(PI+PI/4)));
   return vertices;
 }
 //level no se usa jaja
 function drawPolygon(p,_level){
   fill(colorPickerCuadro.value());
   beginShape();
-  for(let i=0;i<p.length;i++){
+  for(let i=0;i<p.length-1;i++){
     vertex(p[i].x,p[i].y);
   }
   endShape(CLOSE);
 }
 //Pero aqui si
 function drawPolyPhoto(p, level){
-  /*let maskPoly = createGraphics(length*(proportion**(level)),length*(proportion**(level)));
-  maskPoly.beginShape();
-  for(let i=0;i<p.length;i++){
-    maskPoly.curveVertex(p[i].x,p[i].y);
-  }
-  maskPoly.endShape(CLOSE);
-  uploadedImage.mask(maskPoly)*/
-  image(uploadedImage, p[2].x, p[2].y, sqrt(2)*length*proportion**(level), sqrt(2)*length*proportion**(level));
+  let imgCopy = uploadedImage.get();
+  a = sqrt(2)*length*proportion**level;
+  imgCopy.resize(a,a);
+  image(imgCopy, p[p.length-1].x, p[p.length-1].y);
 }
 
 function draw(){
