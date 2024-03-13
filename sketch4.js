@@ -1,7 +1,7 @@
 
 let fractalDiv;
 let divWidth, divHeight
-let length, proportion, maxlevel, colorPicker, uploadedImage, logo_im, logo_unam;
+let length, proportion, maxlevel, colorPicker, uploadedImage, logo_im, logo_unam,numgens;
 
 function setup() {
   //  Contenedor
@@ -38,12 +38,17 @@ function setup() {
   let text3 = createP('zoom');
   text3.parent("slider");
   //  pq.position(20, 85);
-  lengthSlider = createSlider(divWidth / 10, divWidth / 2, divWidth / 5, 0);
+  lengthSlider = createSlider(divWidth / 20, divWidth / 5, divWidth/10 , 0);
   //lengthSlider = createSlider(width / 18, width / 2, width / 10, width / 18);
   lengthSlider.parent("slider");
   lengthSlider.class("sliderSkin");
 
-  //  lengthSlider.position(20, 120);
+  let text4 = createP('Caras');
+  text4.parent("slider");
+  generatorSlider = createSlider(4 , 10 , 4 , 2);
+  generatorSlider.parent("slider");
+  generatorSlider.class("sliderSkin");
+
   let texto_color = createP("Color del fondo");
   texto_color.parent("slider");
   colorPicker = createColorPicker(color(173, 216, 230));
@@ -59,35 +64,78 @@ function setup() {
   iterationsSlider.changed(drawFractal);
   proportionSlider.changed(drawFractal);
   lengthSlider.changed(drawFractal);
+  generatorSlider.changed(drawFractal);
   colorPicker.changed(drawFractal);
+  colorPickerCuadro.changed(drawFractal)
   // Evento para cambiar el colorPicker
   colorPicker.input(changeBackgroundColor);
+  drawFractal();
 }
 
+function generateVertex(){
+  let vertices = [];
+  let theta = PI/numgens
+  for(let i=0; i<numgens;i++){
+    p = createVector(length*cos(2*PI*i/numgens+theta),length*sin(2*PI*i/numgens+theta));
+    append(vertices, p);
+  }
+  return vertices;
+}
+//level no se usa jaja
+function drawPolygon(p,_level){
+  fill(colorPickerCuadro.value());
+  beginShape();
+  for(let i=0;i<p.length;i++){
+    vertex(p[i].x,p[i].y);
+  }
+  endShape(CLOSE);
+}
+//Pero aqui si
+function drawPolyPhoto(p, level){
+  /*let maskPoly = createGraphics(length*(proportion**(level)),length*(proportion**(level)));
+  maskPoly.beginShape();
+  for(let i=0;i<p.length;i++){
+    maskPoly.curveVertex(p[i].x,p[i].y);
+  }
+  maskPoly.endShape(CLOSE);
+  uploadedImage.mask(maskPoly)*/
+  image(uploadedImage, p[2].x, p[2].y, sqrt(2)*length*proportion**(level), sqrt(2)*length*proportion**(level));
+}
 
-function draw() {
-  clear()
-  translate(width / 2, height / 2);
-  //translate(divWidth / 2,height/2);
-  //translate(canvas.width / 2,canvas.height/2);
-  drawFractal();
-  image(logo_im, -canvas.width/2+5, -canvas.height/2 , canvas.width/12, canvas.width/12);
-  image(logo_unam, -canvas.width/2 +10, -canvas.height/2, canvas.width/13, canvas.width/13);
+function draw(){
 }
 
 function drawFractal() {
+  //Trasladamos
+  clear();
+  translate(width / 2, height / 2);
+  //Escuchamos los valores
   maxlevel = iterationsSlider.value();
   proportion = proportionSlider.value();
   length = lengthSlider.value();
-  h = length / 2;
-  f_1 = funciones(createVector(h, -h));
-  g_1 = funciones(createVector(h, h));
-  f_2 = funciones(createVector(-h, h));
-  g_2 = funciones(createVector(-h, -h));
-  transformaciones = [f_1, g_1, f_2, g_2];
-  drawOrbit(transformaciones, createVector(-h, -h));
+  numgens = generatorSlider.value();
+
+  //Creamos las transformaciones que generaran el fractal
+  let transformaciones =[];
+  for(let i = 0; i<numgens;i++){
+    append(transformaciones, funciones(createVector
+    (length*cos(2*PI*(i)/numgens+PI/numgens),
+    length*sin(2*PI*(i)/numgens+PI/numgens))));
+  }
+
+  //Generamos los vertices y empezamos a dibujar.
+  vertices = generateVertex();
+  let dibujar;
+  if (uploadedImage){
+    dibujar = drawPolyPhoto;
+  }else{
+    dibujar = drawPolygon;
+  }
+  drawOrbit(transformaciones,vertices,dibujar);
 }
 
+//Crea las funciones generadoras
+//Es una funcion que desplaza hacia direccion y escala por proporcion
 function funciones(direccion) {
   return function (p) {
     return p5.Vector.add(
@@ -95,18 +143,21 @@ function funciones(direccion) {
         p5.Vector.add(p, direccion), proportion), direccion);
   }
 }
+
+//Crea una lista de las direcciones posibles para cada direccion
 function createIndexesNotInverse() {
   let inotinverse = [];
   let kinv;
-  for (let k = 1; k <= 4; k++) {
-    kinv = ((k + 1) % 4);
+  for (let k=1; k<=numgens;k++){
+    kinv = ((k + numgens/2 - 1) % numgens);
+    
     let a = [];
     let b = [];
-    for (let j = kinv + 1; j < 4; j++) {
-      append(a, j);250
+    for(let j = kinv+1;j<numgens;j++){
+      append(a,j);
     }
-    for (let j = 0; j <= kinv - 1; j++) {
-      append(b, j);
+    for(let j = 0;j<=kinv-1;j++){
+      append(b,j);
     }
     c = a.concat(b);
     inotinverse.push(c);
@@ -115,73 +166,73 @@ function createIndexesNotInverse() {
 }
 
 
-function drawOrbit(transformaciones, p){
+function drawOrbit(transformaciones, p,dibujo){
   indexesNotInverse = createIndexesNotInverse();
 
   function traverseForward(p, index, level){
-    if(uploadedImage){
-      image(uploadedImage, p.x, p.y, length*(proportion**(level)), length*(proportion**(level)));
-
-    } else {
-    fill(colorPickerCuadro.value());
-    square(p.x,p.y,length*(proportion**(level)));
-    }
-
-    if (level >= maxlevel){
+    dibujo(p, level);
+    //Si ya acabamos o el diametro es muy pequeño salimos
+    difference = p5.Vector.sub(p[0],p[numgens/2]);
+    if (level >= maxlevel ||mag(difference.x,difference.y) < length/20){
       return;
     }
     let indices = indexesNotInverse[index];
-    for (let i=0; i<3;i++){
-      traverseForward(transformaciones[indices[i]](p), indices[i], level+1);
+    //Recorremos las posibles direcciones
+    for (let i=0; i<numgens-1;i++){
+      let f_p =[];
+      for(let j=0;j< p.length;j++){
+        append( f_p,transformaciones[indices[i]](p[j]) );
+      }
+      traverseForward(f_p, indices[i], level+1);
     }
   }
-  if(uploadedImage){
-    image(uploadedImage, p.x, p.y, length, length);
-  } else{
-    fill(colorPickerCuadro.value())
-    square(p.x,p.y,length);
-  }
-
-  for(let i = 0;i<4;i++){
-    traverseForward(transformaciones[i](p),i,1);
+  //Dibujamos 
+  dibujo(p, 0);
+  for(let i = 0;i<numgens;i++){
+    //Vamos a aplicar cada transformacion al poligono
+    let f_p =[];
+    for(let j=0;j< p.length;j++){
+      append( f_p,transformaciones[i](p[j]));
+    }
+    //Y nos vamos
+    traverseForward(f_p,i,1);
   }
 }
 
 
 function preload(){
-  logo_im = loadImage("imgs/im.png");
-  logo_unam = loadImage("imgs/unam.png");
+  // logo_im = loadImage("imgs/im.png");
+  // logo_unam = loadImage("imgs/unam.png");
 }
 
-  function windowResized() {
-    // Actualiza el tamaño del lienzo cuando se cambia el tamaño de la ventana
-    divWidth = fractalDiv.size().width;
-    resizeCanvas(divWidth, windowHeight/2);
-  }
-  //  Cambiar color background
-  function changeBackgroundColor() {
-    // Obtener el color seleccionado por el color picker
-    let selectedColor = colorPicker.color();
-    // Aplicar el color como fondo del contenedor fractalDiv
-    fractalDiv.style("background-color", selectedColor.toString());
-  }
+function windowResized() {
+  // Actualiza el tamaño del lienzo cuando se cambia el tamaño de la ventana
+  divWidth = fractalDiv.size().width;
+  resizeCanvas(divWidth, windowHeight/2);
+}
+//  Cambiar color background
+function changeBackgroundColor() {
+  // Obtener el color seleccionado por el color picker
+  let selectedColor = colorPicker.color();
+  // Aplicar el color como fondo del contenedor fractalDiv
+  fractalDiv.style("background-color", selectedColor.toString());
+}
 
 
-  function uploadImage() {
-    const fileInput = document.getElementById('imageUpload');
-    const file = fileInput.files[0];
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        uploadedImage = loadImage(event.target.result, function(img) {
-          console.log("Ya se subió");
-          drawFractal();
-          //para que se actualice el fractal justo después de subir la foto
-        });
-      };
-      reader.readAsDataURL(file);
-    } else {
-      console.error("No hay foto");
-    }
+function uploadImage() {
+  const fileInput = document.getElementById('imageUpload');
+  const file = fileInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      uploadedImage = loadImage(event.target.result, function(img) {
+        console.log("Ya se subió");
+        drawFractal();
+        //para que se actualice el fractal justo después de subir la foto
+      });
+    };
+    reader.readAsDataURL(file);
+  } else {
+    console.error("No hay foto");
   }
+}
