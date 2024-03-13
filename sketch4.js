@@ -21,7 +21,7 @@ function setup() {
   let text1 = createP('iteraciones');
   text1.parent("slider");
   //p.position(20, 5);
-  iterationsSlider = createSlider(1, 6, 3, 1);
+  iterationsSlider = createSlider(1, 5, 3, 1);
   iterationsSlider.parent("slider");
   iterationsSlider.class("sliderSkin");
 
@@ -45,7 +45,7 @@ function setup() {
 
   let text4 = createP('Caras');
   text4.parent("slider");
-  generatorSlider = createSlider(4 , 10 , 4 , 2);
+  generatorSlider = createSlider(4 , 8 , 4 , 2);
   generatorSlider.parent("slider");
   generatorSlider.class("sliderSkin");
 
@@ -69,14 +69,16 @@ function setup() {
   colorPickerCuadro.changed(drawFractal)
   // Evento para cambiar el colorPicker
   colorPicker.input(changeBackgroundColor);
+  colorPickerCuadro.input(drawFractal);
+  translate(width / 2, height / 2);
   drawFractal();
 }
 
-function generateVertex(){
+function generateVertex(scale=1){
   let vertices = [];
   let theta = PI/numgens
   for(let i=0; i<numgens;i++){
-    p = createVector(length*cos(2*PI*i/numgens+theta),length*sin(2*PI*i/numgens+theta));
+    p = createVector(scale*length*cos(2*PI*i/numgens+theta),scale*length*sin(2*PI*i/numgens+theta));
     append(vertices, p);
   }
   append(vertices, createVector(length*cos(PI+PI/4),length*sin(PI+PI/4)));
@@ -96,16 +98,21 @@ function drawPolyPhoto(p, level){
   let imgCopy = uploadedImage.get();
   a = sqrt(2)*length*proportion**level;
   imgCopy.resize(a,a);
-  image(imgCopy, p[p.length-1].x, p[p.length-1].y);
-}
-
-function draw(){
+  let mascara = createGraphics(a,a);
+  let vertices = generateVertex(sqrt(2)/2*proportion**level);
+  mascara.beginShape();
+  for(let i=0; i<vertices.length-1;i++){
+    mascara.vertex(vertices[i].x+a/2, vertices[i].y+a/2);
+  }
+  mascara.endShape(CLOSE);
+  imgCopy.mask(mascara);
+  image(imgCopy, p[p.length-1].x, p[p.length-1].y,a,a);
 }
 
 function drawFractal() {
   //Trasladamos
   clear();
-  translate(width / 2, height / 2);
+  
   //Escuchamos los valores
   maxlevel = iterationsSlider.value();
   proportion = proportionSlider.value();
@@ -123,11 +130,13 @@ function drawFractal() {
   //Generamos los vertices y empezamos a dibujar.
   vertices = generateVertex();
   let dibujar;
+
   if (uploadedImage){
     dibujar = drawPolyPhoto;
   }else{
     dibujar = drawPolygon;
   }
+
   drawOrbit(transformaciones,vertices,dibujar);
 }
 
@@ -170,7 +179,13 @@ function drawOrbit(transformaciones, p,dibujo){
     dibujo(p, level);
     //Si ya acabamos o el diametro es muy pequeño salimos
     difference = p5.Vector.sub(p[0],p[numgens/2]);
-    if (level >= maxlevel ||mag(difference.x,difference.y) < length/20){
+
+    if (uploadedImage){
+      if (level >=3){
+        return;
+      }
+    }
+    if (level >= maxlevel ||mag(difference.x,difference.y) < length/18){
       return;
     }
     let indices = indexesNotInverse[index];
