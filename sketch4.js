@@ -46,7 +46,7 @@ function setup() {
 
   let text4 = createP('Caras');
   text4.parent("slider");
-  generatorSlider = createSlider(4 , 8 , 4 , 2);
+  generatorSlider = createSlider(4 , 14, 4 , 2);
   generatorSlider.parent("slider");
   generatorSlider.class("sliderSkin");
 
@@ -111,18 +111,6 @@ function maskImage(){
 
 //Pero aqui si
 function drawPolyPhoto(p, level){
-  // let imgCopy = uploadedImage.get();
-  // a = sqrt(2)*length*proportion**level;
-  // imgCopy.resize(a,a);
-  // let mascara = createGraphics(a,a);
-  // let vertices = generateVertex(sqrt(2)/2*proportion**level);
-  // mascara.beginShape();
-  // for(let i=0; i<vertices.length-1;i++){
-  //   mascara.vertex(vertices[i].x+a/2, vertices[i].y+a/2);
-  // }
-  // mascara.endShape(CLOSE);
-  // imgCopy.mask(mascara);
-  //tint(colorPickerCuadro.value())
   a = 2*length*proportion**level;
   image(imgCopy, p[p.length-1].x, p[p.length-1].y,a,a);
 }
@@ -198,12 +186,6 @@ function drawOrbit(transformaciones, p,dibujo){
     dibujo(p, level);
     //Si ya acabamos o el diametro es muy pequeño salimos
     difference = p5.Vector.sub(p[0],p[numgens/2]);
-
-    if (uploadedImage){
-      if (level >=3){
-        return;
-      }
-    }
     if (level >= maxlevel ||mag(difference.x,difference.y) < length/18){
       return;
     }
