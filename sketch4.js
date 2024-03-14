@@ -2,6 +2,7 @@
 let fractalDiv;
 let divWidth, divHeight
 let length, proportion, maxlevel, colorPicker, uploadedImage, logo_im, logo_unam,numgens;
+let imgCopy;
 
 function setup() {
   //  Contenedor
@@ -81,7 +82,7 @@ function generateVertex(scale=1){
     p = createVector(scale*length*cos(2*PI*i/numgens+theta),scale*length*sin(2*PI*i/numgens+theta));
     append(vertices, p);
   }
-  append(vertices, createVector(length*cos(PI+PI/4),length*sin(PI+PI/4)));
+  append(vertices, createVector(-length,-length));
   return vertices;
 }
 //level no se usa jaja
@@ -93,25 +94,41 @@ function drawPolygon(p,_level){
   }
   endShape(CLOSE);
 }
-//Pero aqui si
-function drawPolyPhoto(p, level){
-  let imgCopy = uploadedImage.get();
-  a = sqrt(2)*length*proportion**level;
-  imgCopy.resize(a,a);
-  let mascara = createGraphics(a,a);
-  let vertices = generateVertex(sqrt(2)/2*proportion**level);
+
+function maskImage(){
+  imgCopy = uploadedImage.get();
+  imgCopy.resize(2*length,2*length);
+  let mascara = createGraphics(2*length,2*length);
+  let vertices = generateVertex();
   mascara.beginShape();
   for(let i=0; i<vertices.length-1;i++){
-    mascara.vertex(vertices[i].x+a/2, vertices[i].y+a/2);
+    mascara.vertex(vertices[i].x+length, vertices[i].y+length);
   }
   mascara.endShape(CLOSE);
   imgCopy.mask(mascara);
-  tint(colorPickerCuadro.value())
+}
+
+
+//Pero aqui si
+function drawPolyPhoto(p, level){
+  // let imgCopy = uploadedImage.get();
+  // a = sqrt(2)*length*proportion**level;
+  // imgCopy.resize(a,a);
+  // let mascara = createGraphics(a,a);
+  // let vertices = generateVertex(sqrt(2)/2*proportion**level);
+  // mascara.beginShape();
+  // for(let i=0; i<vertices.length-1;i++){
+  //   mascara.vertex(vertices[i].x+a/2, vertices[i].y+a/2);
+  // }
+  // mascara.endShape(CLOSE);
+  // imgCopy.mask(mascara);
+  //tint(colorPickerCuadro.value())
+  a = 2*length*proportion**level;
   image(imgCopy, p[p.length-1].x, p[p.length-1].y,a,a);
 }
 
 function drawFractal() {
-  //Trasladamos
+  //Limpiamos
   clear();
   
   //Escuchamos los valores
@@ -133,6 +150,7 @@ function drawFractal() {
   let dibujar;
 
   if (uploadedImage){
+    maskImage();
     dibujar = drawPolyPhoto;
   }else{
     dibujar = drawPolygon;
